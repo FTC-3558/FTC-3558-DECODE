@@ -6,7 +6,6 @@ import java.util.List;
 
 import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.commands.groups.ParallelGroup;
-import dev.nextftc.hardware.delegates.
 import dev.nextftc.core.subsystems.SubsystemGroup;
 
 public class Sorting_System extends SubsystemGroup {
@@ -23,8 +22,7 @@ public class Sorting_System extends SubsystemGroup {
                 Shuffler.INSTANCE
         );
     }
-
-    public  test_color;
+    
 
     public class Intakestart extends Command {
         boolean stop = false;
