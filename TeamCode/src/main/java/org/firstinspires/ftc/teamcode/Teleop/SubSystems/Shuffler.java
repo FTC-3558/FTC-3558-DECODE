@@ -1,10 +1,5 @@
 package org.firstinspires.ftc.teamcode.Teleop.SubSystems;
 
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Servo;
-
-import java.util.List;
-
 import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.subsystems.Subsystem;
 import dev.nextftc.hardware.impl.ServoEx;
@@ -16,8 +11,11 @@ public class Shuffler implements Subsystem {
 
     private ServoEx servo = new ServoEx("Shuffler");
 
-    public Command pos1 = new SetPosition(servo, 0.0).requires(this);
-    public Command pos2 = new SetPosition(servo, 0.5).requires(this);
-    public Command pos3 = new SetPosition(servo, 1.0).requires(this);
+    public Command IntakePos1 = new SetPosition(servo, 0.1).requires(this);
+    public Command IntakePos3 = new SetPosition(servo, 0.5).requires(this);
+    public Command IntakePos2 = new SetPosition(servo, .87).requires(this);
 
+    public Command ShootPos1 = new SetPosition(servo, 0.30).requires(this);
+    public Command ShootPos2 = new SetPosition(servo, 0.69).requires(this);
+    public Command ShootPos3 = new SetPosition(servo, -.25).requires(this);
 }

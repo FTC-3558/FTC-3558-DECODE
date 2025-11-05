@@ -5,6 +5,7 @@ import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.subsystems.Subsystem;
 import dev.nextftc.hardware.controllable.RunToPosition;
 import dev.nextftc.hardware.impl.MotorEx;
+import dev.nextftc.hardware.powerable.SetPower;
 
 public class Intake implements Subsystem {
     public static final Intake INSTANCE = new Intake();
@@ -14,16 +15,11 @@ public class Intake implements Subsystem {
 
     private MotorEx motor = new MotorEx("Intake");
 
-    private ControlSystem controlSystem = ControlSystem.builder()
-            .velPid(0.005, 0, 0)
-            .basicFF()
-            .build();
 
-    public Command on = new RunToPosition(controlSystem, 0).requires(this);
-    public Command off = new RunToPosition(controlSystem, .5).requires(this);
+    public Command on = new SetPower(motor, -1).requires(this);
+    public Command off = new SetPower(motor, 0).requires(this);
 
     @Override
     public void periodic() {
-        motor.setPower(controlSystem.calculate(motor.getState()));
     }
 }

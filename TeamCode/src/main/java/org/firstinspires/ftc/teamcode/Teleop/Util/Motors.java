@@ -19,7 +19,7 @@ public class Motors {
     public DcMotor[] DriveMotors;
     public Motors(HardwareMap hwmp) {
         this.HardwareMap = hwmp;
-        this.Limelight = HardwareMap.get(Limelight3A.class, "limelight");
+        this.Limelight = HardwareMap.get(Limelight3A.class, "Limelight");
         this.imu = HardwareMap.get(IMU.class, "imu");
         this.FrontLeft = new MotorEx("leftFront");
         this.FrontRight = new MotorEx("rightFront");
