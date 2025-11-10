@@ -22,7 +22,7 @@ public class Sorting_System extends SubsystemGroup {
                 Shuffler.INSTANCE
         );
     }
-    
+
 
     public class Intakestart extends Command {
         boolean stop = false;
