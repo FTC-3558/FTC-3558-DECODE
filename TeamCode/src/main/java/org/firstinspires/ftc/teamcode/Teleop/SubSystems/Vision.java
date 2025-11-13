@@ -1,37 +1,35 @@
 package org.firstinspires.ftc.teamcode.Teleop.SubSystems;
 
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
-
-import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.limelightvision.LLResultTypes.FiducialResult;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import java.util.List;
 
-public class Vision {
+import dev.nextftc.core.subsystems.Subsystem;
 
-    Limelight3A limelight;
-    public Vision(Limelight3A limelight) {
-        this.limelight = limelight;
+public class Vision implements Subsystem {
+
+    public static final Vision INSTANCE = new Vision();
+    private Limelight3A limelight;
+
+    private Vision() {}
+
+    /** Setter used by the OpMode to link the hardware instance. */
+    public void setLimelight(Limelight3A ll) {
+        this.limelight = ll;
     }
 
-    /**
-     * Gets the game-specific "Motif" based on detected AprilTag IDs (21, 22, 23).
-     * Returns "Void" if no relevant tag is found.
-     * @return A string representing the identified motif (GPP, PGP, PPG, or Void).
-     */
+    /** Gets the scoring motif (GPP, PGP, PPG) from the Limelight camera. */
     public String getMotif() {
-        // Initialize Motif. We will set it to "Void" later if no relevant tag is found.
-        String motif = "";
+        if (limelight == null) return "VOID";
 
-        // Use a temporary list to avoid calling getLatestResult multiple times
+        String motif = "VOID";
         List<FiducialResult> fiducials = limelight.getLatestResult().getFiducialResults();
 
-        // Loop through all detected fiducial tags
         for (FiducialResult fiducial : fiducials) {
-            int id = fiducial.getFiducialId(); // The ID number of the fiducial
-
-            // Check if the ID is one of the target motif tags (21, 22, or 23)
-            if (id >= 21 && id <= 23) {
+            int id = fiducial.getFiducialId();
+            if (id >= 21 && id <= 23) { // Check for the target motifs
                 switch (id) {
                     case 21:
                         motif = "GPP";
@@ -43,30 +41,21 @@ public class Vision {
                         motif = "PPG";
                         break;
                 }
-                // Once we find a relevant tag and set the motif, we can stop searching.
-                return motif;
+                return motif; // Return the first detected motif
             }
         }
-
-        // If the loop finishes without returning (meaning no relevant tag was found),
-        // return the default "Void" motif.
-        return "Void";
+        return motif; // Returns "VOID" if no relevant tag is found
     }
 
-    /**
-     * Gets the yaw (rotation) needed to align to a specific target tag (ID 20).
-     * @return The yaw angle (in degrees or radians, depending on the Limelight's configuration)
-     * from the robot's pose relative to the target tag, or 0 if tag 20 is not found.
-     */
     public double getRotationTO() {
+        if (limelight == null) return 0;
+
         double Angle = 0;
         List<FiducialResult> fiducials = limelight.getLatestResult().getFiducialResults();
         for (FiducialResult fiducial : fiducials) {
-            int id = fiducial.getFiducialId(); // The ID number of the fiducial
+            int id = fiducial.getFiducialId();
             if (id == 20) {
-                // Assuming getRobotPoseTargetSpace() returns a valid Pose3D
                 Angle = fiducial.getRobotPoseTargetSpace().getOrientation().getYaw();
-                // Since you only care about tag 20, we can exit the loop early
                 break;
             }
         }

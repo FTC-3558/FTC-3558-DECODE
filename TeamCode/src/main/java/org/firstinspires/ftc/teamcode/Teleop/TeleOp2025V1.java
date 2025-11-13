@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.Teleop;
 
 import androidx.annotation.NonNull;
 
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -11,10 +12,13 @@ import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.GoBildaPinpointDriver;
+import org.firstinspires.ftc.teamcode.Teleop.Commands.Auto_Score;
+import org.firstinspires.ftc.teamcode.Teleop.Commands.Intake_Store;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Arm;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Intake;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Shooter;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Shuffler;
+import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Vision; // NEW: Import Vision subsystem
 
 import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.commands.groups.SequentialGroup;
@@ -35,11 +39,21 @@ import dev.nextftc.hardware.impl.MotorEx;
 @TeleOp(name = "Teleop")
 public class TeleOp2025V1 extends NextFTCOpMode {
     public TeleOp2025V1() {
+        // --- HARDWARE INJECTION FIX ---
+        // The OpMode constructor has access to hardwareMap. We retrieve the sensor here.
+        NormalizedColorSensor colorSensor = hardwareMap.get(NormalizedColorSensor.class, "ballColorSensor");
+        Limelight3A Limelight = hardwareMap.get(Limelight3A.class, "limelight");
+
+        // We inject the sensor into the subsystem using the setter.
+        Shuffler.INSTANCE.setColorSensor(colorSensor);
+        Vision.INSTANCE.setLimelight(Limelight);
+
         addComponents(
                 new SubsystemComponent(Intake.INSTANCE),
                 new SubsystemComponent(Shuffler.INSTANCE),
                 new SubsystemComponent(Arm.INSTANCE),
                 new SubsystemComponent(Shooter.INSTANCE),
+                new SubsystemComponent(Vision.INSTANCE),
                 BulkReadComponent.INSTANCE,
                 BindingsComponent.INSTANCE
         );
@@ -53,12 +67,6 @@ public class TeleOp2025V1 extends NextFTCOpMode {
 
 
     GoBildaPinpointDriver odo;
-
-    double LeftPower;
-    double RightPower;
-    double LeftStrafePower;
-    double RightStrafePower;
-
     DcMotor FrontLeft;
     DcMotor FrontRight;
     DcMotor BackLeft;
@@ -85,80 +93,52 @@ public class TeleOp2025V1 extends NextFTCOpMode {
 
         odo.resetPosAndIMU();
 
-        /*
-        FrontLeft = hardwareMap.get(DcMotor.class, "leftFront");
-        FrontRight = hardwareMap.get(DcMotor.class, "rightFront");
-        BackRight = hardwareMap.get(DcMotor.class, "rightBack");
-        BackLeft = hardwareMap.get(DcMotor.class, "leftBack");
 
-        FrontLeft.setDirection(DcMotor.Direction.FORWARD);
-        FrontRight.setDirection(DcMotor.Direction.REVERSE);
-        BackLeft.setDirection(DcMotor.Direction.FORWARD);
-        BackRight.setDirection(DcMotor.Direction.REVERSE );
+        // --- NEW AUTOMATED BINDINGS ---
 
-        telemetry.addData("angle", odo.getPosition().getHeading(AngleUnit.RADIANS));
-        telemetry.update();
-         */
+        // 1. LEFT BUMPER: Automated Intake and Store (Rotation, Intake, Detection, Storage)
+        // Replaces the manual left trigger, A, X, and B buttons
+        Gamepads.gamepad1().leftBumper()
+                .whenBecomesTrue(new Intake_Store());
 
+        // 2. RIGHT BUMPER: Automated 3-Ball Score (Checks balls, reads vision, scores, resets)
+        // Replaces the manual right trigger, D-Pad, and Y buttons for shooting
+        Gamepads.gamepad1().rightBumper()
+                .whenBecomesTrue(new Auto_Score());
+
+        // 3. LEFT TRIGGER: Manual Intake Reverse (for clearing jams)
         Gamepads.gamepad1().leftTrigger()
                 .atLeast(.7).toggleOnBecomesTrue()
-                .whenBecomesTrue(Intake.INSTANCE.on)
+                .whenBecomesTrue(Intake.INSTANCE.Reverse) // Bind reverse function
                 .whenBecomesFalse(Intake.INSTANCE.off);
 
-        Gamepads.gamepad1().a().whenBecomesTrue(new SequentialGroup(Arm.INSTANCE.down, Shuffler.INSTANCE.IntakePos1));
-        Gamepads.gamepad1().x().whenBecomesTrue(new SequentialGroup(Arm.INSTANCE.down, Shuffler.INSTANCE.IntakePos2));
-        Gamepads.gamepad1().b().whenBecomesTrue(new SequentialGroup(Arm.INSTANCE.down, Shuffler.INSTANCE.IntakePos3));
+        // --- MANUAL OVERRIDES (Used for debugging or individual control) ---
 
-        Gamepads.gamepad1().dpadLeft().whenBecomesTrue(Shuffler.INSTANCE.ShootPos1);
-        Gamepads.gamepad1().dpadDown().whenBecomesTrue(Shuffler.INSTANCE.ShootPos2);
-        Gamepads.gamepad1().dpadRight().whenBecomesTrue(Shuffler.INSTANCE.ShootPos3);
+        // X Button: Manual Shoot (Hold Flywheel and push ball)
+        Gamepads.gamepad1().x()
+                .toggleOnBecomesTrue()
+                .whenBecomesTrue(Shooter.INSTANCE.on) // Flywheel ON
+                .whenBecomesFalse(Shooter.INSTANCE.off); // Flywheel OFF
 
+        // Y Button: Manual Arm Up/Down
         Gamepads.gamepad1().y()
                 .toggleOnBecomesTrue()
                 .whenBecomesTrue(Arm.INSTANCE.up)
                 .whenBecomesFalse(Arm.INSTANCE.down);
 
-        Gamepads.gamepad1().rightTrigger()
-                .atLeast(.7).toggleOnBecomesTrue()
-                .whenBecomesTrue(Shooter.INSTANCE.on)
-                .whenBecomesFalse(Shooter.INSTANCE.off);
 
+        // DPad Controls for Manual Shuffler Indexing (useful for testing)
+        Gamepads.gamepad1().dpadLeft().whenBecomesTrue(Shuffler.INSTANCE.rotateToEmptySlotForIntake());
+        Gamepads.gamepad1().dpadRight().whenBecomesTrue(Shuffler.INSTANCE.rotateSlotToShoot(0));
 
-
-
-
+        // --- REMOVED BINDINGS ---
+        // Removed: A, X, B bindings (manual shuffler rotation - now handled by IntakeAndStoreCommand)
+        // Removed: D-Pad bindings (manual shuffler rotation - now handled by AutoScoreAllCommand)
+        // Removed: Right Trigger binding (manual shooter on/off - now handled by AutoScoreAllCommand)
     }
 
     @Override
     public void onUpdate() {
-
         odo.update();
-
-
-        /*
-        double drive = -gamepad1.left_stick_y;
-        double turn = gamepad1.right_stick_x;
-        double strafe = gamepad1.left_stick_x;
-
-        double botHeading = odo.getPosition().getHeading(AngleUnit.RADIANS);
-
-
-
-        double rotX = strafe * Math.cos(-botHeading) - drive * Math.sin(-botHeading);
-        double rotY = strafe * Math.sin(-botHeading) + drive * Math.cos(-botHeading);
-
-        rotX = rotX * 1.1;
-
-        double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(strafe), 1);
-        double frontLeftPower = (rotY + rotX + turn) / denominator;
-        double backLeftPower = (rotY - rotX + turn) / denominator;
-        double frontRightPower = (rotY - rotX - turn) / denominator;
-        double backRightPower = (rotY + rotX - turn) / denominator;
-
-        FrontLeft.setPower(frontLeftPower);
-        BackLeft.setPower(backLeftPower);
-        BackRight.setPower(backRightPower);
-        FrontRight.setPower(frontRightPower);
-         */
     }
 }
