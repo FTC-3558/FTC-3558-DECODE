@@ -25,7 +25,7 @@ public class Auto_Score extends Command {
     private static final List<BallColor> PPG_ORDER = Arrays.asList(BallColor.PURPLE, BallColor.PURPLE, BallColor.GREEN);
  //
 
-    /**
+    /*
      * Creates a command that checks for three balls, identifies the motif, and scores all three
      * in the sequence defined by the motif. This is ideal for TeleOp automation.
      * Requirements: Shuffler, Shooter, Arm, and Vision.

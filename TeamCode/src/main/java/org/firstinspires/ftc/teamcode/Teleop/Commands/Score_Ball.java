@@ -12,7 +12,7 @@ import dev.nextftc.core.commands.groups.SequentialGroup;
 import dev.nextftc.core.commands.utility.InstantCommand;
 import java.util.Set;
 
-/**
+/*
  * Composite command to perform a single shot sequence.
  * This command assumes the target ball is in a known physical slot.
  * * Requirements: Shuffler, Shooter, Arm
@@ -24,7 +24,7 @@ public class Score_Ball extends Command {
     private final Arm arm = Arm.INSTANCE;
     private final SequentialGroup sequence;
 
-    /**
+    /*
      * Creates a sequential command to score the ball currently in the given slot index.
      * @param slotIndex The physical index (0, 1, or 2) of the ball to be scored.
      */

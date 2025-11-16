@@ -10,7 +10,7 @@ import dev.nextftc.core.commands.groups.SequentialGroup;
 import dev.nextftc.core.commands.utility.InstantCommand;
 import java.util.Set;
 
-/**
+/*
  * Commands the robot to rotate the shuffler to an empty slot, run the intake until a ball is detected,
  * then stops the intake and stores the detected color in that slot.
  * Requires: Intake and Shuffler
