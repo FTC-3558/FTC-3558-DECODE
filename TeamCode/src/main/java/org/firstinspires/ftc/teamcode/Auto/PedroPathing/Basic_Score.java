@@ -108,6 +108,11 @@ public class Basic_Score extends NextFTCOpMode {
     }
 
     @Override
+    public void onUpdate() {
+        Vision.INSTANCE.UpdateMotif();
+    }
+
+    @Override
     public void onStartButtonPressed() {
         autonomousRoutine().schedule();
     }
