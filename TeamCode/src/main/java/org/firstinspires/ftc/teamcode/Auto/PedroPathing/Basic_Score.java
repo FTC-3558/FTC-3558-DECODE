@@ -99,11 +99,11 @@ public class Basic_Score extends NextFTCOpMode {
                 // Optional: Wait briefly for the vision reading to stabilize after stopping the drive train.
                 new Delay(250),
 
-                // 2. Score ALL three pre-loaded balls based on the detected motif.
-                new Auto_Score(),
+                // 2. Drive to the shooting area.
+                new FollowPath(paths.Leave_ToShoot),
 
-                // 3. Drive to the shooting area.
-                new FollowPath(paths.Leave_ToShoot)
+                // 3. Score ALL three pre-loaded balls based on the detected motif.
+                new Auto_Score()
         );
     }
 

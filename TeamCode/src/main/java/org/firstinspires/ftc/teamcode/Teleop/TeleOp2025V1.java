@@ -140,5 +140,6 @@ public class TeleOp2025V1 extends NextFTCOpMode {
     @Override
     public void onUpdate() {
         odo.update();
+        Vision.INSTANCE.UpdateMotif();
     }
 }

@@ -23,7 +23,7 @@ public class Auto_Score extends Command {
     private static final List<BallColor> GPP_ORDER = Arrays.asList(BallColor.GREEN, BallColor.PURPLE, BallColor.PURPLE);
     private static final List<BallColor> PGP_ORDER = Arrays.asList(BallColor.PURPLE, BallColor.GREEN, BallColor.PURPLE);
     private static final List<BallColor> PPG_ORDER = Arrays.asList(BallColor.PURPLE, BallColor.PURPLE, BallColor.GREEN);
-
+ //
 
     /**
      * Creates a command that checks for three balls, identifies the motif, and scores all three

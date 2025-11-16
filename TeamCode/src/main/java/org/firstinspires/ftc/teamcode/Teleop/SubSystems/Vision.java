@@ -13,6 +13,7 @@ public class Vision implements Subsystem {
     public static final Vision INSTANCE = new Vision();
     private Limelight3A limelight;
 
+    public String Motif = "Void";
     private Vision() {}
 
     /** Setter used by the OpMode to link the hardware instance. */
@@ -21,30 +22,31 @@ public class Vision implements Subsystem {
     }
 
     /** Gets the scoring motif (GPP, PGP, PPG) from the Limelight camera. */
-    public String getMotif() {
-        if (limelight == null) return "VOID";
-
-        String motif = "VOID";
+    public void UpdateMotif() {
         List<FiducialResult> fiducials = limelight.getLatestResult().getFiducialResults();
 
-        for (FiducialResult fiducial : fiducials) {
-            int id = fiducial.getFiducialId();
-            if (id >= 21 && id <= 23) { // Check for the target motifs
-                switch (id) {
-                    case 21:
-                        motif = "GPP";
-                        break;
-                    case 22:
-                        motif = "PGP";
-                        break;
-                    case 23:
-                        motif = "PPG";
-                        break;
+        if (Motif == "VOID") {
+            for (FiducialResult fiducial : fiducials) {
+                int id = fiducial.getFiducialId();
+                if (id >= 21 && id <= 23) { // Check for the target motifs
+                    switch (id) {
+                        case 21:
+                            Motif = "GPP";
+                            break;
+                        case 22:
+                            Motif = "PGP";
+                            break;
+                        case 23:
+                            Motif = "PPG";
+                            break;
+                    }
                 }
-                return motif; // Return the first detected motif
             }
         }
-        return motif; // Returns "VOID" if no relevant tag is found
+    }
+
+    public String getMotif() {
+        return Motif;
     }
 
     public double getRotationTO() {
