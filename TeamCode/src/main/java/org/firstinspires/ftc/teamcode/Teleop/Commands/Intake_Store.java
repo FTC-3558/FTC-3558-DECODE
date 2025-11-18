@@ -5,6 +5,7 @@ import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Shuffler;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Shuffler.BallColor;
 
 import dev.nextftc.core.commands.Command;
+import dev.nextftc.core.commands.delays.Delay;
 import dev.nextftc.core.commands.delays.WaitUntil;
 import dev.nextftc.core.commands.groups.SequentialGroup;
 import dev.nextftc.core.commands.utility.InstantCommand;
@@ -19,25 +20,28 @@ public class Intake_Store extends Command {
 
     private final Intake intake = Intake.INSTANCE;
     private final Shuffler shuffler = Shuffler.INSTANCE;
-    private final SequentialGroup sequence;
+    private SequentialGroup sequence;
 
     public Intake_Store() {
         // Initialize the internal sequence
-        this.sequence = new SequentialGroup(
+        sequence = new SequentialGroup(
                 // Step 1: Find the first empty slot and rotate the shuffler to align that slot for intake.
                 shuffler.rotateToEmptySlotForIntake(),
 
                 // Step 2: Start the intake roller.
                 intake.on,
 
+                //Delay Cause the Shufflers Slow
+                new Delay(1000),
+
                 // Step 3: CRITICAL: Wait until the sensor detects a ball.
                 new WaitUntil(shuffler::isBallPresent).requires(shuffler),
 
                 // Step 4: Stop the intake immediately upon detection.
-                intake.off,
+                intake.off
 
                 // Step 5: Replaced anonymous Command with RunOnceCommand to read sensor and store color
-                new InstantCommand(this::StoreSensorData).requires(shuffler)
+                //new InstantCommand(this::StoreSensorData).requires(shuffler)
         );
     }
 
@@ -61,6 +65,7 @@ public class Intake_Store extends Command {
     @Override
     public void start() {
         // executed when the command begins
+        sequence.schedule();
     }
 
     @Override

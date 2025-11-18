@@ -38,7 +38,7 @@ public class Shuffler implements Subsystem {
 
         // Slightly Unnecessary but allows for just passing an int instead of using strings
         intakePosMap = new HashMap<>();
-        intakePosMap.put(0, new SetPosition(servo, 0.1).requires(this));
+        intakePosMap.put(0, new SetPosition(servo, 0.3).requires(this));
         intakePosMap.put(1, new SetPosition(servo, 0.87).requires(this));
         intakePosMap.put(2, new SetPosition(servo, 0.5).requires(this));
 

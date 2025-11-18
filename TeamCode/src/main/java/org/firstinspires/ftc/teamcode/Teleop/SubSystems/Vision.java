@@ -68,10 +68,23 @@ public class Vision implements Subsystem {
         for (FiducialResult fiducial : fiducials) {
             int id = fiducial.getFiducialId();
             if (id == 20) {
-                Angle = fiducial.getRobotPoseTargetSpace().getOrientation().getYaw();
+                Angle = fiducial.getTargetXDegrees();//fiducial.getRobotPoseFieldSpace().getOrientation().getYaw() - fiducial.getTargetPoseCameraSpace().getOrientation().getYaw();
                 break;
             }
         }
         return Angle;
+    }
+
+    public boolean HasAprilTagInSight() {
+        if (limelight.getLatestResult() == null) return false;
+
+        List<FiducialResult> fiducials = limelight.getLatestResult().getFiducialResults();
+        for (FiducialResult fiducial : fiducials) {
+            int id = fiducial.getFiducialId();
+            if (id == 20) {
+                return true;
+            }
+        }
+        return false;
     }
 }

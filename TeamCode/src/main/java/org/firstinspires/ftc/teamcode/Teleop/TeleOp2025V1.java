@@ -49,7 +49,7 @@ public class TeleOp2025V1 extends NextFTCOpMode {
 
 
     // Rotational Lock
-    private static final double ROTATION_P_GAIN = 0.02;
+    public static final double ROTATION_P_GAIN = 0.03;
     private static final double MAX_ROTATION_POWER = 0.5;
     private boolean Locked = false;
 
@@ -59,13 +59,6 @@ public class TeleOp2025V1 extends NextFTCOpMode {
     public TeleOp2025V1() {
 
         // The OpMode constructor has access to hardwareMap. We retrieve the sensor here.
-        NormalizedColorSensor colorSensor = hardwareMap.get(NormalizedColorSensor.class, "ballColorSensor");
-        Limelight3A Limelight = hardwareMap.get(Limelight3A.class, "limelight");
-
-        // We inject the sensor into the subsystem using the setter.
-        //Only Needed For Color Sensor & LimeLight because NEXTFTC doesn't have wrapper classes for them
-        Shuffler.INSTANCE.setColorSensor(colorSensor);
-        Vision.INSTANCE.setLimelight(Limelight);
 
         addComponents(
                 new SubsystemComponent(Intake.INSTANCE),
@@ -82,6 +75,17 @@ public class TeleOp2025V1 extends NextFTCOpMode {
 
     @Override
     public void onStartButtonPressed() {
+        NormalizedColorSensor colorSensor = hardwareMap.get(NormalizedColorSensor.class, "Color");
+        Limelight3A Limelight = hardwareMap.get(Limelight3A.class, "limelight");
+
+        Limelight.pipelineSwitch(3);
+
+        Limelight.start();
+
+        // We inject the sensor into the subsystem using the setter.
+        //Only Needed For Color Sensor & LimeLight because NEXTFTC doesn't have wrapper classes for them
+        Shuffler.INSTANCE.setColorSensor(colorSensor);
+        Vision.INSTANCE.setLimelight(Limelight);
 
         // --- DRIVE COMMAND ---
         MecanumDriverControlled driverControlled = new MecanumDriverControlled(
@@ -154,6 +158,8 @@ public class TeleOp2025V1 extends NextFTCOpMode {
     public void onUpdate() {
         odo.update();
         Vision.INSTANCE.UpdateMotif();
+        telemetry.addData("rotation to",Vision.INSTANCE.getRotationTO());
+        telemetry.update();
     }
 
     // --- TARGET LOCK FUNCTIONS ---
@@ -177,7 +183,14 @@ public class TeleOp2025V1 extends NextFTCOpMode {
     */
 
     private double DriveAngle(Boolean locked) {
-        if (locked) { return getTargetRotationPower(); }
+        if (locked) {
+            if (Vision.INSTANCE.HasAprilTagInSight()) {
+                return getTargetRotationPower();
+            }
+            else {
+                return gamepad1.right_stick_x;
+            }
+        }
         else { return gamepad1.right_stick_x;}
     }
 

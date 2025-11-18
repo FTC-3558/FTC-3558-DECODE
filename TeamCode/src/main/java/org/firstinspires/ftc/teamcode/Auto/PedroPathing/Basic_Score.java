@@ -39,11 +39,11 @@ public class Basic_Score extends NextFTCOpMode {
         // --- HARDWARE INJECTION FIXES ---
 
         // 1. Vision: Initialize Limelight and pass it to the Vision singleton
-        limelight = hardwareMap.get(Limelight3A.class, "limelight3a");
+        limelight = hardwareMap.get(Limelight3A.class, "Limelight");
         vision.setLimelight(limelight);
 
         // 2. Shuffler: Initialize Color Sensor and pass it to the Shuffler singleton
-        NormalizedColorSensor colorSensor = hardwareMap.get(NormalizedColorSensor.class, "ballColorSensor");
+        NormalizedColorSensor colorSensor = hardwareMap.get(NormalizedColorSensor.class, "Color");
         Shuffler.INSTANCE.setColorSensor(colorSensor);
 
         // Add components

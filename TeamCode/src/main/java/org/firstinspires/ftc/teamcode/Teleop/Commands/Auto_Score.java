@@ -5,6 +5,7 @@ import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Shuffler.BallColor;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Vision;
 
 import dev.nextftc.core.commands.Command;
+import dev.nextftc.core.commands.delays.Delay;
 import dev.nextftc.core.commands.groups.SequentialGroup;
 import dev.nextftc.core.commands.utility.InstantCommand;
 
@@ -37,6 +38,7 @@ public class Auto_Score extends Command {
         // Step 2: Check if all slots are full and determine the score order.
         if (shuffler.getBallColors().contains(BallColor.VOID)) {
             // If not all slots are full, Proceed to shoot all available balls.
+            dynamicCommands.add(new InstantCommand(new Delay(1)));
         } else {
             // Step 3: Determine the required scoring sequence based on Limelight data
             String motif = vision.getMotif();
