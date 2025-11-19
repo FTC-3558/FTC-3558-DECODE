@@ -68,7 +68,7 @@ public class Vision implements Subsystem {
         for (FiducialResult fiducial : fiducials) {
             int id = fiducial.getFiducialId();
             if (id == 20) {
-                Angle = fiducial.getTargetXDegrees();//fiducial.getRobotPoseFieldSpace().getOrientation().getYaw() - fiducial.getTargetPoseCameraSpace().getOrientation().getYaw();
+                Angle = ; //fiducial.getTargetXDegrees();//fiducial.getRobotPoseFieldSpace().getOrientation().getYaw() - fiducial.getTargetPoseCameraSpace().getOrientation().getYaw();
                 break;
             }
         }
@@ -86,5 +86,20 @@ public class Vision implements Subsystem {
             }
         }
         return false;
+    }
+
+    public double SetShooterPower() {
+        if (limelight.getLatestResult() == null) return 0;
+
+        double Power = .9;
+        List<FiducialResult> fiducials = limelight.getLatestResult().getFiducialResults();
+        for (FiducialResult fiducial : fiducials) {
+            int id = fiducial.getFiducialId();
+            if (id == 20) {
+                Power = fiducial.getTargetPoseCameraSpace().getPosition().z;
+                break;
+            }
+        }
+        return Power;
     }
 }
