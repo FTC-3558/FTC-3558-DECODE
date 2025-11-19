@@ -149,8 +149,8 @@ public class TeleOp2025V1 extends NextFTCOpMode {
                 );
 
         // DPad Controls for Manual Shuffler Indexing
-        Gamepads.gamepad1().dpadLeft().whenBecomesTrue(Shuffler.INSTANCE.rotateToEmptySlotForIntake());
-        Gamepads.gamepad1().dpadRight().whenBecomesTrue(Shuffler.INSTANCE.rotateSlotToShoot(0));
+        Gamepads.gamepad1().dpadLeft().whenBecomesTrue(()->Shuffler.INSTANCE.rotateToEmptySlotForIntake());
+        Gamepads.gamepad1().dpadRight().whenBecomesTrue(()->Shuffler.INSTANCE.rotateSlotToShoot(0));
     }
 
     // --- UPDATES ---
@@ -158,8 +158,6 @@ public class TeleOp2025V1 extends NextFTCOpMode {
     public void onUpdate() {
         odo.update();
         Vision.INSTANCE.UpdateMotif();
-        telemetry.addData("rotation to",Vision.INSTANCE.getRotationTO());
-        telemetry.update();
     }
 
     // --- TARGET LOCK FUNCTIONS ---

@@ -78,7 +78,7 @@ public class Auto_Score extends Command {
             }
 
             // Step 5: After scoring all three balls, rotate the shuffler to an empty slot for the next intake.
-            dynamicCommands.add(shuffler.rotateToEmptySlotForIntake());
+            dynamicCommands.add(new InstantCommand(()-> shuffler.rotateToEmptySlotForIntake()));
         }
 
         // Final Step: Initialize the final SequentialGroup field by passing the dynamically built list.
@@ -95,6 +95,7 @@ public class Auto_Score extends Command {
     @Override
     public void start() {
         // executed when the command begins
+        sequence.schedule();
     }
 
     @Override

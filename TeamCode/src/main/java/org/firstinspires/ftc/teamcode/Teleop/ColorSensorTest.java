@@ -18,6 +18,6 @@ public class ColorSensorTest extends OpMode {
         telemetry.addData("Blue", cs.getNormalizedColors().blue);
         telemetry.addData("Green", cs.getNormalizedColors().green);
         telemetry.addData("Alpha", cs.getNormalizedColors().alpha);
-        telemetry.addData("red", cs.getNormalizedColors().red);
+        telemetry.update();
     }
 }

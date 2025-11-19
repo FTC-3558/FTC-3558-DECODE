@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.Teleop.Commands;
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
+
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Intake;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Shuffler;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Shuffler.BallColor;
@@ -26,22 +28,22 @@ public class Intake_Store extends Command {
         // Initialize the internal sequence
         sequence = new SequentialGroup(
                 // Step 1: Find the first empty slot and rotate the shuffler to align that slot for intake.
-                shuffler.rotateToEmptySlotForIntake(),
+                new InstantCommand(()-> shuffler.rotateToEmptySlotForIntake()),
 
                 // Step 2: Start the intake roller.
                 intake.on,
 
                 //Delay Cause the Shufflers Slow
-                new Delay(1000),
+                new Delay(5),
 
                 // Step 3: CRITICAL: Wait until the sensor detects a ball.
                 new WaitUntil(shuffler::isBallPresent).requires(shuffler),
 
                 // Step 4: Stop the intake immediately upon detection.
-                intake.off
+                intake.off,
 
                 // Step 5: Replaced anonymous Command with RunOnceCommand to read sensor and store color
-                //new InstantCommand(this::StoreSensorData).requires(shuffler)
+                new InstantCommand(this::StoreSensorData).requires(shuffler)
         );
     }
 

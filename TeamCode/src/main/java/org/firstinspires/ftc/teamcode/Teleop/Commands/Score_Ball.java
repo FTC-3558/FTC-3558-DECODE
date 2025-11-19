@@ -62,6 +62,7 @@ public class Score_Ball extends Command {
     @Override
     public void start() {
         // executed when the command begins
+        sequence.schedule();
     }
 
     @Override

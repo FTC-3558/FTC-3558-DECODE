@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.Auto.PedroPathing;
 
-import static org.firstinspires.ftc.teamcode.Auto.PedroPathing.Tuning.follower;
-
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
@@ -27,88 +25,91 @@ import dev.nextftc.extensions.pedro.PedroComponent;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 
-@Autonomous(name = "Basic_Score_Vision")
-public class Basic_Score extends NextFTCOpMode {
+@Autonomous(name = "GoalSide_Score")
+public class GoalSide_Score extends NextFTCOpMode {
 
     private Limelight3A limelight;
-    private final Vision vision = Vision.INSTANCE;
-    private final Paths paths;
+    private Paths paths;
 
-    public Basic_Score() {
-
-        // --- HARDWARE INJECTION FIXES ---
-
-        // 1. Vision: Initialize Limelight and pass it to the Vision singleton
-        limelight = hardwareMap.get(Limelight3A.class, "Limelight");
-        vision.setLimelight(limelight);
-
-        // 2. Shuffler: Initialize Color Sensor and pass it to the Shuffler singleton
-        NormalizedColorSensor colorSensor = hardwareMap.get(NormalizedColorSensor.class, "Color");
-        Shuffler.INSTANCE.setColorSensor(colorSensor);
-
-        // Add components
+    public GoalSide_Score() {
         addComponents(
-                // Ensure all needed subsystems are added
-                new SubsystemComponent(Intake.INSTANCE, Shooter.INSTANCE, Shuffler.INSTANCE, Arm.INSTANCE, vision),
+                new SubsystemComponent(Intake.INSTANCE, Shooter.INSTANCE, Shuffler.INSTANCE, Arm.INSTANCE, Vision.INSTANCE),
                 BulkReadComponent.INSTANCE,
+                // The PedroComponent is responsible for creating and holding the Follower instance
                 new PedroComponent(Constants::createFollower)
         );
 
-        // 3. Initialize Paths
-        this.paths = new Paths(follower);
-
-        // 4. Pre-load the Shuffler state to simulate manually loaded balls for this autonomous.
-        // We assume a fixed starting state of PGP: PURPLE in slot 0, GREEN in slot 1, PURPLE in slot 2.
+        // Pre-load the Shuffler state
         Shuffler.INSTANCE.storeColorInSlot(BallColor.PURPLE, 0);
         Shuffler.INSTANCE.storeColorInSlot(BallColor.GREEN, 1);
         Shuffler.INSTANCE.storeColorInSlot(BallColor.PURPLE, 2);
     }
 
-    // The conditional scoring methods are now removed, as AutoScoreAllCommand handles the motif logic.
-
-
-    // --- Path Definitions (Unchanged) ---
+    // --- Path Definitions ---
     public static class Paths {
+        // Define the exact starting pose from the field setup
+        public static final Pose START_POSE = new Pose(34.098, 135.257, Math.toRadians(180));
+
         public final PathChain Start_BackUp_Turn;
         public final PathChain Leave_ToShoot;
 
         public Paths(Follower follower) {
-            this.Start_BackUp_Turn = follower
+            Start_BackUp_Turn = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(108.855, 134.981), new Pose(83.974, 120.052))
+                            // Use START_POSE for clarity, though 34.098, 135.257 is correct
+                            new BezierLine(START_POSE, new Pose(47.432, 96.350))
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(360), Math.toRadians(90))
+                    .setLinearHeadingInterpolation(START_POSE.getHeading(), Math.toRadians(70))
                     .build();
-            this.Leave_ToShoot = follower
+
+            Leave_ToShoot = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(95.480, 119.643), new Pose(95.675, 96.260))
+                            new BezierLine(new Pose(47.432, 96.350), new Pose(66.885, 76.896))
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(45))
+                    .setLinearHeadingInterpolation(Math.toRadians(70), Math.toRadians(135))
                     .build();
         }
     }
 
     public Command autonomousRoutine() {
+        // 1. Hardware Initialization
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        Vision.INSTANCE.setLimelight(limelight);
+
+        NormalizedColorSensor colorSensor = hardwareMap.get(NormalizedColorSensor.class, "Color");
+        Shuffler.INSTANCE.setColorSensor(colorSensor);
+
+        // 2. Retrieve the initialized Follower from the PedroComponent
+        Follower follower = PedroComponent.follower();
+
+        // ** CRITICAL ADDITION: Set the initial pose for the follower **
+        // This tells the pathing system where the robot starts relative to the path coordinates.
+        follower.setStartingPose(Paths.START_POSE);
+
+        // 3. Initialize Paths now that the Follower is ready
+        this.paths = new Paths(follower);
 
         return new SequentialGroup(
                 // 1. Drive the robot to the scoring position where the camera can see the tags.
                 new FollowPath(paths.Start_BackUp_Turn),
 
                 // Optional: Wait briefly for the vision reading to stabilize after stopping the drive train.
-                new Delay(250),
+                new Delay(1),
 
                 // 2. Drive to the shooting area.
-                new FollowPath(paths.Leave_ToShoot),
+                new FollowPath(paths.Leave_ToShoot)
 
                 // 3. Score ALL three pre-loaded balls based on the detected motif.
-                new Auto_Score()
+                //new Auto_Score()
         );
     }
 
     @Override
     public void onUpdate() {
+        // Since Pinpoint is assumed to be running and feeding data back to the
+        // follower, the pose estimation is automatically updated here.
         Vision.INSTANCE.UpdateMotif();
     }
 

@@ -7,6 +7,8 @@ import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.subsystems.Subsystem;
 import dev.nextftc.hardware.impl.ServoEx;
 import dev.nextftc.hardware.positionable.SetPosition;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -29,23 +31,23 @@ public class Shuffler implements Subsystem {
     private final BallColor[] ballColors = new BallColor[]{BallColor.VOID, BallColor.VOID, BallColor.VOID};
 
     // Maps the physical slot index (0, 1, 2) to the required servo command to align it for INTAKE/DETECTION.
-    private final Map<Integer, Command> intakePosMap;
+    private final ArrayList<Command> intakePosMap;
 
     // Maps the physical slot index (0, 1, 2) to the required servo command to align it for SHOOTING.
-    private final Map<Integer, Command> shootPosMap;
+    private final ArrayList<Command> shootPosMap;
 
     {
 
         // Slightly Unnecessary but allows for just passing an int instead of using strings
-        intakePosMap = new HashMap<>();
-        intakePosMap.put(0, new SetPosition(servo, 0.3).requires(this));
-        intakePosMap.put(1, new SetPosition(servo, 0.87).requires(this));
-        intakePosMap.put(2, new SetPosition(servo, 0.5).requires(this));
+        intakePosMap = new ArrayList<>();
+        intakePosMap.add(new SetPosition(servo, 0.3).requires(this));
+        intakePosMap.add(new SetPosition(servo, 0.69).requires(this));
+        intakePosMap.add(new SetPosition(servo, 0.05).requires(this));
 
-        shootPosMap = new HashMap<>();
-        shootPosMap.put(0, new SetPosition(servo, 0.30).requires(this));
-        shootPosMap.put(1, new SetPosition(servo, 0.69).requires(this));
-        shootPosMap.put(2, new SetPosition(servo, 0.05).requires(this));
+        shootPosMap = new ArrayList<>();
+        shootPosMap.add(new SetPosition(servo, 0.1).requires(this));
+        shootPosMap.add(new SetPosition(servo, 0.87).requires(this));
+        shootPosMap.add(new SetPosition(servo, 0.5).requires(this));
     }
 
     // Color Sensor Hardware Injector
@@ -61,7 +63,7 @@ public class Shuffler implements Subsystem {
 
         // Using the alpha channel (total intensity) from normalized colors for detection.
         // This value needs to be calibrated on your robot!
-        final float DETECTION_THRESHOLD_ALPHA = 0.05f;
+        final float DETECTION_THRESHOLD_ALPHA = 0.4f;
 
         return colors.alpha > DETECTION_THRESHOLD_ALPHA;
     }
@@ -83,9 +85,9 @@ public class Shuffler implements Subsystem {
 
         // Color logic based on normalized values (where R+G+B is roughly constant).
         // These threshold values need careful calibration for your specific game balls.
-        if (green > red && green > blue && green > 0.4f) {
+        if (green > red && green > blue && green > 0.02f) {
             return BallColor.GREEN;
-        } else if (blue > red && blue > green && blue > 0.4f) {
+        } else if (blue > red && blue > green && blue > 0.02f) {
             return BallColor.PURPLE;
         }
 
@@ -96,14 +98,16 @@ public class Shuffler implements Subsystem {
      * Finds the first empty slot and returns the command to rotate to its intake position.
      * Automatically aligns for intake after a shot (where a slot becomes VOID).
      */
-    public Command rotateToEmptySlotForIntake() {
+    public void rotateToEmptySlotForIntake() {
         for (int i = 0; i < ballColors.length; i++) {
             if (ballColors[i] == BallColor.VOID) {
-                return intakePosMap.get(i);
+                intakePosMap.get(i).schedule();
+            }
+            else {
+                intakePosMap.get(0).schedule();
             }
         }
         // If all slots are full, default to the first slot's intake position (Slot 0)
-        return intakePosMap.get(0);
     }
 
     /* Returns the command to rotate the given slot index (0, 1, or 2) to the SHOOTING position. */
