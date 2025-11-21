@@ -18,7 +18,6 @@ public class Shuffler implements Subsystem {
     public static final Shuffler INSTANCE = new Shuffler();
 
     // Class Constructor
-    private Shuffler() {}
 
     // Hardware Maps
     // Using the default FTC Servo class
@@ -28,7 +27,7 @@ public class Shuffler implements Subsystem {
 
     // Simple State Machine Vars
     public enum BallColor { GREEN, PURPLE, VOID }
-    public static BallColor[] ballColors = new BallColor[]{BallColor.VOID, BallColor.VOID, BallColor.VOID};
+    public static BallColor[] ballColors;
 
     // --- SERVO POSITION CONSTANTS ---
     // These constants replace the 'SetPosition' commands from the original file.
@@ -40,6 +39,10 @@ public class Shuffler implements Subsystem {
 
     // Maps the physical slot index (0, 1, 2) to the required servo position to align it for SHOOTING.
     private final ArrayList<Double> shootPosMap;
+
+    private Shuffler() {
+        ballColors = new BallColor[]{BallColor.VOID, BallColor.VOID, BallColor.VOID};
+    }
 
     {
 

@@ -47,14 +47,6 @@ public class Auto_ScoreRed extends Command {
                 }
             }
         }
-
-// 💥 CRITICAL FIX: Ensure the command list is NOT empty. 💥
-        if (dynamicCommands.isEmpty()) {
-            // If the list is empty (e.g., Shuffler is completely empty, or vision scoring failed to match),
-            // add a command that immediately finishes without doing anything (a NoOp command).
-            dynamicCommands.add(new Delay(.1));
-        }
-
         else {
             // Step 3: Determine the required scoring sequence based on Limelight data
             String motif = vision.getMotif();
@@ -103,6 +95,13 @@ public class Auto_ScoreRed extends Command {
             commandsArray[i] = dynamicCommands.get(i);
         }
 
+// 💥 CRITICAL FIX: Ensure the command list is NOT empty. 💥
+        if (dynamicCommands.isEmpty()) {
+            // If the list is empty (e.g., Shuffler is completely empty, or vision scoring failed to match),
+            // add a command that immediately finishes without doing anything (a NoOp command).
+            dynamicCommands.add(new Delay(.1));
+        }
+
         // Pass the manually built array to the helper method.
         this.sequence = createSequentialGroup(commandsArray);
     }
@@ -123,12 +122,13 @@ public class Auto_ScoreRed extends Command {
     @Override
     public void start() {
         // executed when the command begins
-        sequence.schedule();
+        sequence.start();
     }
 
     @Override
     public void update() {
         // executed on every update of the command
+        sequence.update();
     }
 
     @Override
