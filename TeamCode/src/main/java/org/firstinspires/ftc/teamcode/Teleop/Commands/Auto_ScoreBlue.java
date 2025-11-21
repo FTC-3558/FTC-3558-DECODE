@@ -38,7 +38,7 @@ public class Auto_ScoreBlue extends Command {
         List<Command> dynamicCommands = new ArrayList<>();
 
         // Step 2: Check if all slots are full and determine the score order.
-        if (shuffler.getBallColors().contains(BallColor.VOID)) {
+        if (shuffler.getBallColors().contains(BallColor.VOID) || !shuffler.getBallColors().contains(BallColor.PURPLE) || !shuffler.getBallColors().contains(BallColor.GREEN)) {
             // If not all slots are full, Proceed to shoot all available balls.
             List<BallColor> ballState = shuffler.getBallColors();
             for (int i = 0; i < ballState.size(); i++) {
@@ -72,18 +72,12 @@ public class Auto_ScoreBlue extends Command {
             // We use a mutable copy of the ball colors list to track which slots have been used.
             List<BallColor> currentBallState = new ArrayList<>(shuffler.getBallColors());
 
-            for (BallColor targetColor : scoreOrder) {
-                // Find the index of the first slot containing the target color in the *current* state.
-                int slotIndex = currentBallState.indexOf(targetColor);
-
-                if (slotIndex != -1) {
-                    // Add the command to score the ball from the found slot.
-                    dynamicCommands.add(new Score_BallBlue(slotIndex));
-
-                    // IMPORTANT: Mark the ball in the *local state* as VOID so we don't try to shoot it again.
-                    currentBallState.set(slotIndex, BallColor.VOID);
-                }
-            }
+            dynamicCommands.add(new Score_BallBlue(shuffler.findSlotByColor(scoreOrder.get(0))));
+            currentBallState.set(0, BallColor.VOID);
+            dynamicCommands.add(new Score_BallBlue(shuffler.findSlotByColor(scoreOrder.get(1))));
+            currentBallState.set(1, BallColor.VOID);
+            dynamicCommands.add(new Score_BallBlue(shuffler.findSlotByColor(scoreOrder.get(2))));
+            currentBallState.set(2, BallColor.VOID);
 
             // Step 5: After scoring all three balls, rotate the shuffler to an empty slot for the next intake.
             dynamicCommands.add(new InstantCommand(shuffler::rotateToEmptySlotForIntake));
