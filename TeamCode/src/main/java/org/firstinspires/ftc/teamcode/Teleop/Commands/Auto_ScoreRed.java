@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import dev.nextftc.core.commands.Command;
+import dev.nextftc.core.commands.delays.Delay;
 import dev.nextftc.core.commands.groups.SequentialGroup;
 import dev.nextftc.core.commands.utility.InstantCommand;
 
@@ -46,6 +47,14 @@ public class Auto_ScoreRed extends Command {
                 }
             }
         }
+
+// 💥 CRITICAL FIX: Ensure the command list is NOT empty. 💥
+        if (dynamicCommands.isEmpty()) {
+            // If the list is empty (e.g., Shuffler is completely empty, or vision scoring failed to match),
+            // add a command that immediately finishes without doing anything (a NoOp command).
+            dynamicCommands.add(new Delay(.1));
+        }
+
         else {
             // Step 3: Determine the required scoring sequence based on Limelight data
             String motif = vision.getMotif();

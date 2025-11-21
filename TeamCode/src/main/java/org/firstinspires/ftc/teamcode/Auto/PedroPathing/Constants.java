@@ -44,7 +44,7 @@ public class Constants {
             .strafePodX(-2.5)
             .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED )
             .distanceUnit(DistanceUnit.INCH)
-            .hardwareMapName("GoBuildaOdom")
+            .hardwareMapName("Go")
             .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
             .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
             .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD);
