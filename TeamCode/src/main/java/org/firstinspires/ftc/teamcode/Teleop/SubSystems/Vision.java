@@ -60,7 +60,7 @@ public class Vision implements Subsystem {
 
 
     // --- TARGET LOCK ---
-    public double getRotationTO() {
+    public double getRotationTOBlue() {
         if (limelight.getLatestResult() == null) return 0;
 
         double Angle = 0;
@@ -68,14 +68,28 @@ public class Vision implements Subsystem {
         for (FiducialResult fiducial : fiducials) {
             int id = fiducial.getFiducialId();
             if (id == 20) {
-                Angle = ; //fiducial.getTargetXDegrees();//fiducial.getRobotPoseFieldSpace().getOrientation().getYaw() - fiducial.getTargetPoseCameraSpace().getOrientation().getYaw();
+                Angle = fiducial.getTargetXDegrees(); //fiducial.getTargetXDegrees();//fiducial.getRobotPoseFieldSpace().getOrientation().getYaw() - fiducial.getTargetPoseCameraSpace().getOrientation().getYaw();
+                break;
+            }
+        }
+        return Angle;
+    }
+    public double getRotationTORed() {
+        if (limelight.getLatestResult() == null) return 0;
+
+        double Angle = 0;
+        List<FiducialResult> fiducials = limelight.getLatestResult().getFiducialResults();
+        for (FiducialResult fiducial : fiducials) {
+            int id = fiducial.getFiducialId();
+            if (id == 24) { //Only Difference between red and blue is the tag it looks for
+                Angle = fiducial.getTargetXDegrees(); //fiducial.getTargetXDegrees();//fiducial.getRobotPoseFieldSpace().getOrientation().getYaw() - fiducial.getTargetPoseCameraSpace().getOrientation().getYaw();
                 break;
             }
         }
         return Angle;
     }
 
-    public boolean HasAprilTagInSight() {
+    public boolean HasAprilTagInSightBlue() {
         if (limelight.getLatestResult() == null) return false;
 
         List<FiducialResult> fiducials = limelight.getLatestResult().getFiducialResults();
@@ -87,17 +101,55 @@ public class Vision implements Subsystem {
         }
         return false;
     }
+    public boolean HasAprilTagInSightRed() {
+        if (limelight.getLatestResult() == null) return false;
 
-    public double SetShooterPower() {
+        List<FiducialResult> fiducials = limelight.getLatestResult().getFiducialResults();
+        for (FiducialResult fiducial : fiducials) {
+            int id = fiducial.getFiducialId();
+            if (id == 24) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public double getShooterPowerBlue() {
         if (limelight.getLatestResult() == null) return 0;
 
         double Power = .9;
+        double distance;
         List<FiducialResult> fiducials = limelight.getLatestResult().getFiducialResults();
         for (FiducialResult fiducial : fiducials) {
             int id = fiducial.getFiducialId();
             if (id == 20) {
-                Power = fiducial.getTargetPoseCameraSpace().getPosition().z;
-                break;
+                distance = fiducial.getTargetPoseCameraSpace().getPosition().z;
+                if (distance > 3) { //DISTANCE FROM TAG THIS IS CORRECT
+                    return 1; //THis is what it returns if outside of goal scoring zone
+                }
+                else {
+                    return Power; //THIS IS THE VALUE YOU NEED TO TUNE MADDEN
+                }
+            }
+        }
+        return Power;
+    }
+    public double getShooterPoweRed() {
+        if (limelight.getLatestResult() == null) return 0;
+
+        double Power = .9;
+        double distance;
+        List<FiducialResult> fiducials = limelight.getLatestResult().getFiducialResults();
+        for (FiducialResult fiducial : fiducials) {
+            int id = fiducial.getFiducialId();
+            if (id == 24) {
+                distance = fiducial.getTargetPoseCameraSpace().getPosition().z;
+                if (distance > 3) { //DISTANCE FROM TAG THIS IS CORRECT
+                    return 1; //THis is what it returns if outside of goal scoring zone
+                }
+                else {
+                    return Power; //THIS IS THE VALUE YOU NEED TO TUNE MADDEN
+                }
             }
         }
         return Power;

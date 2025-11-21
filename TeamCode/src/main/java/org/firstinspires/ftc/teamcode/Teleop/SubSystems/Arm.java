@@ -11,7 +11,7 @@ public class Arm implements Subsystem {
 
     private ServoEx servo = new ServoEx("Arm");
 
-    public Command up = new SetPosition(servo, .72).requires(this);
-    public Command down = new SetPosition(servo, .95 ).requires(this);
+    public Command up = new SetPosition(servo, .95).requires(this);
+    public Command down = new SetPosition(servo, .72 ).requires(this);
 
 }

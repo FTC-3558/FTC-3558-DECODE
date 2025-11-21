@@ -28,13 +28,13 @@ public class Intake_Store extends Command {
         // Initialize the internal sequence
         sequence = new SequentialGroup(
                 // Step 1: Find the first empty slot and rotate the shuffler to align that slot for intake.
-                new InstantCommand(()-> shuffler.rotateToEmptySlotForIntake()),
+                new InstantCommand(shuffler::rotateToEmptySlotForIntake),
 
                 // Step 2: Start the intake roller.
                 intake.on,
 
                 //Delay Cause the Shufflers Slow
-                new Delay(5),
+                new Delay(1),
 
                 // Step 3: CRITICAL: Wait until the sensor detects a ball.
                 new WaitUntil(shuffler::isBallPresent).requires(shuffler),

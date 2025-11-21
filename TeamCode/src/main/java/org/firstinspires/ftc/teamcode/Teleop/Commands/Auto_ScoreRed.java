@@ -1,20 +1,20 @@
 package org.firstinspires.ftc.teamcode.Teleop.Commands;
 
+import android.annotation.SuppressLint;
+
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Shuffler;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Shuffler.BallColor;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Vision;
 
-import dev.nextftc.core.commands.Command;
-import dev.nextftc.core.commands.delays.Delay;
-import dev.nextftc.core.commands.groups.SequentialGroup;
-import dev.nextftc.core.commands.utility.InstantCommand;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
-public class Auto_Score extends Command {
+import dev.nextftc.core.commands.Command;
+import dev.nextftc.core.commands.groups.SequentialGroup;
+import dev.nextftc.core.commands.utility.InstantCommand;
+
+public class Auto_ScoreRed extends Command {
 
     private final Shuffler shuffler = Shuffler.INSTANCE;
     private final Vision vision = Vision.INSTANCE; //Fix
@@ -31,15 +31,22 @@ public class Auto_Score extends Command {
      * in the sequence defined by the motif. This is ideal for TeleOp automation.
      * Requirements: Shuffler, Shooter, Arm, and Vision.
      */
-    public Auto_Score() {
+    @SuppressLint("NewApi")
+    public Auto_ScoreRed() {
         // Step 1: Initialize a list to hold the dynamic sequence of commands
         List<Command> dynamicCommands = new ArrayList<>();
 
         // Step 2: Check if all slots are full and determine the score order.
         if (shuffler.getBallColors().contains(BallColor.VOID)) {
             // If not all slots are full, Proceed to shoot all available balls.
-            dynamicCommands.add(new InstantCommand(new Delay(1)));
-        } else {
+            List<BallColor> ballState = shuffler.getBallColors();
+            for (int i = 0; i < ballState.size(); i++) {
+                if (ballState.get(i) != BallColor.VOID) {
+                    dynamicCommands.add(new Score_BallRed(i));
+                }
+            }
+        }
+        else {
             // Step 3: Determine the required scoring sequence based on Limelight data
             String motif = vision.getMotif();
             List<BallColor> scoreOrder;
@@ -55,7 +62,6 @@ public class Auto_Score extends Command {
                     scoreOrder = PPG_ORDER;
                     break;
                 default:
-                    System.out.println("WARNING: Vision failed or unknown motif. Defaulting to PGP sequence.");
                     scoreOrder = PGP_ORDER;
                     break;
             }
@@ -70,7 +76,7 @@ public class Auto_Score extends Command {
 
                 if (slotIndex != -1) {
                     // Add the command to score the ball from the found slot.
-                    dynamicCommands.add(new Score_Ball(slotIndex));
+                    dynamicCommands.add(new Score_BallRed(slotIndex));
 
                     // IMPORTANT: Mark the ball in the *local state* as VOID so we don't try to shoot it again.
                     currentBallState.set(slotIndex, BallColor.VOID);
@@ -78,12 +84,25 @@ public class Auto_Score extends Command {
             }
 
             // Step 5: After scoring all three balls, rotate the shuffler to an empty slot for the next intake.
-            dynamicCommands.add(new InstantCommand(()-> shuffler.rotateToEmptySlotForIntake()));
+            dynamicCommands.add(new InstantCommand(shuffler::rotateToEmptySlotForIntake));
         }
 
-        // Final Step: Initialize the final SequentialGroup field by passing the dynamically built list.
-        // We use toArray() to convert the List<Command> into a Command... array (varargs).
-        this.sequence = new SequentialGroup(dynamicCommands.toArray(new Command[0]));
+        int size = dynamicCommands.size();
+        Command[] commandsArray = new Command[size];
+
+        for (int i = 0; i < size; i++) {
+            commandsArray[i] = dynamicCommands.get(i);
+        }
+
+        // Pass the manually built array to the helper method.
+        this.sequence = createSequentialGroup(commandsArray);
+    }
+
+    // --- New Private Static Helper Method ---
+    // This method is added to the Auto_Score class definition, outside of the constructor.
+    private static SequentialGroup createSequentialGroup(Command[] commands) {
+        // This method forces the varargs signature to be satisfied cleanly.
+        return new SequentialGroup(commands);
     }
 
     // Command delegation methods (delegate all actions to the internal sequence)

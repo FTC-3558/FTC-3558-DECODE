@@ -1,20 +1,20 @@
 package org.firstinspires.ftc.teamcode.Auto.PedroPathing;
 
-import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
+import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.teamcode.Teleop.Commands.Auto_Score;
+import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Arm;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Intake;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Shooter;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Shuffler;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Shuffler.BallColor;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Vision;
-import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Arm;
 
 import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.commands.delays.Delay;
@@ -25,21 +25,33 @@ import dev.nextftc.extensions.pedro.PedroComponent;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 
-@Autonomous(name = "GoalSide_Score")
-public class GoalSide_Score extends NextFTCOpMode {
+// REMOVED: import static org.firstinspires.ftc.teamcode.Auto.PedroPathing.Tuning.follower;
+
+@Autonomous(name = "BaseSide_ScoreBlue")
+public class BaseSide_ScoreBlue extends NextFTCOpMode {
 
     private Limelight3A limelight;
+    // Removed 'final' and initializer because it will be set in autonomousRoutine()
     private Paths paths;
 
-    public GoalSide_Score() {
+    public BaseSide_ScoreBlue() {
+
+        // --- HARDWARE INJECTION FIXES ---
+        // Limelight/Vision and ColorSensor/Shuffler initialization should be done in autonomousRoutine()
+        // or a similar setup method, as hardwareMap is not fully ready in the constructor.
+
+        // Add components
         addComponents(
+                // Ensure all needed subsystems are added
                 new SubsystemComponent(Intake.INSTANCE, Shooter.INSTANCE, Shuffler.INSTANCE, Arm.INSTANCE, Vision.INSTANCE),
                 BulkReadComponent.INSTANCE,
                 // The PedroComponent is responsible for creating and holding the Follower instance
                 new PedroComponent(Constants::createFollower)
         );
 
-        // Pre-load the Shuffler state
+
+        // 4. Pre-load the Shuffler state to simulate manually loaded balls for this autonomous.
+        // We assume a fixed starting state of PGP: PURPLE in slot 0, GREEN in slot 1, PURPLE in slot 2.
         Shuffler.INSTANCE.storeColorInSlot(BallColor.PURPLE, 0);
         Shuffler.INSTANCE.storeColorInSlot(BallColor.GREEN, 1);
         Shuffler.INSTANCE.storeColorInSlot(BallColor.PURPLE, 2);
@@ -47,45 +59,44 @@ public class GoalSide_Score extends NextFTCOpMode {
 
     // --- Path Definitions ---
     public static class Paths {
-        // Define the exact starting pose from the field setup
-        public static final Pose START_POSE = new Pose(34.098, 135.257, Math.toRadians(180));
 
-        public final PathChain Start_BackUp_Turn;
-        public final PathChain Leave_ToShoot;
+        public static final Pose START_POSE = new Pose(55.956, 8.044, Math.toRadians(180));
+        public final PathChain Rotate_to_Motif;
+        public final PathChain Rotate_to_Score;
 
         public Paths(Follower follower) {
-            Start_BackUp_Turn = follower
+            Rotate_to_Motif = follower
                     .pathBuilder()
                     .addPath(
-                            // Use START_POSE for clarity, though 34.098, 135.257 is correct
-                            new BezierLine(START_POSE, new Pose(47.432, 96.350))
+                            new BezierLine(START_POSE, new Pose(56.175, 22.251))
                     )
-                    .setLinearHeadingInterpolation(START_POSE.getHeading(), Math.toRadians(70))
+                    .setLinearHeadingInterpolation(START_POSE.getHeading(), Math.toRadians(75))
                     .build();
 
-            Leave_ToShoot = follower
+            Rotate_to_Score = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(47.432, 96.350), new Pose(66.885, 76.896))
+                            new BezierLine(new Pose(56.175, 22.251), new Pose(62.076, 22.470))
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(70), Math.toRadians(135))
+                    .setLinearHeadingInterpolation(Math.toRadians(75), Math.toRadians(120))
                     .build();
         }
     }
 
     public Command autonomousRoutine() {
-        // 1. Hardware Initialization
+        Shuffler.ballColors = new BallColor[]{BallColor.VOID, BallColor.VOID, BallColor.VOID};
+
+        // 1. Hardware Initialization (Moved from constructor, as it uses hardwareMap)
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        Servo servo = hardwareMap.get(Servo.class, "Shuffler");
         Vision.INSTANCE.setLimelight(limelight);
 
-        NormalizedColorSensor colorSensor = hardwareMap.get(NormalizedColorSensor.class, "Color");
-        Shuffler.INSTANCE.setColorSensor(colorSensor);
+        NormalizedColorSensor color2 = hardwareMap.get(NormalizedColorSensor.class, "Color2");
+        NormalizedColorSensor color1 = hardwareMap.get(NormalizedColorSensor.class, "Color1");
+        Shuffler.INSTANCE.sethardware(color1, color2, servo);
 
-        // 2. Retrieve the initialized Follower from the PedroComponent
+        // 2. FIX: Retrieve the initialized Follower from the PedroComponent
         Follower follower = PedroComponent.follower();
-
-        // ** CRITICAL ADDITION: Set the initial pose for the follower **
-        // This tells the pathing system where the robot starts relative to the path coordinates.
         follower.setStartingPose(Paths.START_POSE);
 
         // 3. Initialize Paths now that the Follower is ready
@@ -93,23 +104,21 @@ public class GoalSide_Score extends NextFTCOpMode {
 
         return new SequentialGroup(
                 // 1. Drive the robot to the scoring position where the camera can see the tags.
-                new FollowPath(paths.Start_BackUp_Turn),
+                new FollowPath(paths.Rotate_to_Motif),
 
                 // Optional: Wait briefly for the vision reading to stabilize after stopping the drive train.
                 new Delay(1),
 
                 // 2. Drive to the shooting area.
-                new FollowPath(paths.Leave_ToShoot)
+                new FollowPath(paths.Rotate_to_Score)
 
                 // 3. Score ALL three pre-loaded balls based on the detected motif.
-                //new Auto_Score()
+               // new Auto_Score()
         );
     }
 
     @Override
     public void onUpdate() {
-        // Since Pinpoint is assumed to be running and feeding data back to the
-        // follower, the pose estimation is automatically updated here.
         Vision.INSTANCE.UpdateMotif();
     }
 

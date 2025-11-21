@@ -1,28 +1,20 @@
 package org.firstinspires.ftc.teamcode.Teleop;
 
-import androidx.annotation.NonNull;
-
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.AnalogInput;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
-import com.qualcomm.robotcore.hardware.NormalizedRGBA;
+import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.GoBildaPinpointDriver;
-import org.firstinspires.ftc.teamcode.Teleop.Commands.Auto_Score;
+import org.firstinspires.ftc.teamcode.Teleop.Commands.Auto_ScoreRed;
 import org.firstinspires.ftc.teamcode.Teleop.Commands.Intake_Store;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Arm;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Intake;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Shooter;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Shuffler;
-import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Vision; // NEW: Import Vision subsystem
+import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Vision;
 
-import dev.nextftc.core.commands.Command;
-import dev.nextftc.core.commands.groups.SequentialGroup;
 import dev.nextftc.core.commands.utility.InstantCommand;
 import dev.nextftc.core.components.BindingsComponent;
 import dev.nextftc.core.components.SubsystemComponent;
@@ -31,15 +23,11 @@ import dev.nextftc.ftc.Gamepads;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 import dev.nextftc.hardware.driving.FieldCentric;
-import dev.nextftc.hardware.driving.HolonomicDrivePowers;
-import dev.nextftc.hardware.driving.HolonomicMode;
 import dev.nextftc.hardware.driving.MecanumDriverControlled;
-import dev.nextftc.hardware.impl.Direction;
-import dev.nextftc.hardware.impl.IMUEx;
 import dev.nextftc.hardware.impl.MotorEx;
 
-@TeleOp(name = "Teleop")
-public class TeleOp2025V1 extends NextFTCOpMode {
+@TeleOp(name = "TeleopRed")
+public class TeleOpRed extends NextFTCOpMode {
 
     // Motor Definitions
     private final MotorEx frontLeftMotor = new MotorEx("leftFront");
@@ -56,7 +44,7 @@ public class TeleOp2025V1 extends NextFTCOpMode {
     // Odometry
     GoBildaPinpointDriver odo;
 
-    public TeleOp2025V1() {
+    public TeleOpRed() {
 
         // The OpMode constructor has access to hardwareMap. We retrieve the sensor here.
 
@@ -75,17 +63,20 @@ public class TeleOp2025V1 extends NextFTCOpMode {
 
     @Override
     public void onStartButtonPressed() {
-        NormalizedColorSensor colorSensor = hardwareMap.get(NormalizedColorSensor.class, "Color");
+        NormalizedColorSensor color1 = hardwareMap.get(NormalizedColorSensor.class, "Color1");
+        NormalizedColorSensor color2 = hardwareMap.get(NormalizedColorSensor.class, "Color2");
         Limelight3A Limelight = hardwareMap.get(Limelight3A.class, "limelight");
-
+        Servo servo = hardwareMap.get(Servo.class, "Shuffler");
         Limelight.pipelineSwitch(3);
 
         Limelight.start();
 
         // We inject the sensor into the subsystem using the setter.
         //Only Needed For Color Sensor & LimeLight because NEXTFTC doesn't have wrapper classes for them
-        Shuffler.INSTANCE.setColorSensor(colorSensor);
+        Shuffler.INSTANCE.sethardware(color1, color2, servo);
         Vision.INSTANCE.setLimelight(Limelight);
+
+        servo.setDirection(Servo.Direction.REVERSE);
 
         // --- DRIVE COMMAND ---
         MecanumDriverControlled driverControlled = new MecanumDriverControlled(
@@ -103,7 +94,7 @@ public class TeleOp2025V1 extends NextFTCOpMode {
         );
         driverControlled.schedule();
 
-        odo = hardwareMap.get(GoBildaPinpointDriver.class,"GoBuildaOdom");
+        odo = hardwareMap.get(GoBildaPinpointDriver.class,"Go");
         odo.resetPosAndIMU();
 
 
@@ -115,7 +106,7 @@ public class TeleOp2025V1 extends NextFTCOpMode {
 
         // 2. RIGHT BUMPER: Automated 3-Ball Score (Checks balls, reads vision, scores, resets)
         Gamepads.gamepad1().rightBumper()
-                .whenBecomesTrue(new Auto_Score());
+                .whenBecomesTrue(new Auto_ScoreRed());
 
         // 3. LEFT TRIGGER: Manual Intake Reverse (for clearing jams)
         Gamepads.gamepad1().leftTrigger()
@@ -133,7 +124,7 @@ public class TeleOp2025V1 extends NextFTCOpMode {
         // X Button: Manual Shoot (Hold Flywheel and push ball)
         Gamepads.gamepad1().x()
                 .toggleOnBecomesTrue()
-                .whenBecomesTrue(Shooter.INSTANCE.on) // Flywheel ON
+                .whenBecomesTrue(Shooter.INSTANCE.on(Vision.INSTANCE.getShooterPoweRed())) // Flywheel ON
                 .whenBecomesFalse(Shooter.INSTANCE.off); // Flywheel OFF
 
         // Y Button: Manual Arm Up/Down
@@ -163,7 +154,7 @@ public class TeleOp2025V1 extends NextFTCOpMode {
     // --- TARGET LOCK FUNCTIONS ---
 
     private double getTargetRotationPower() {
-        double error = Vision.INSTANCE.getRotationTO();
+        double error = Vision.INSTANCE.getRotationTORed();
 
         // Simple P-controller correction
         double rotationPower = error * ROTATION_P_GAIN;
@@ -182,7 +173,7 @@ public class TeleOp2025V1 extends NextFTCOpMode {
 
     private double DriveAngle(Boolean locked) {
         if (locked) {
-            if (Vision.INSTANCE.HasAprilTagInSight()) {
+            if (Vision.INSTANCE.HasAprilTagInSightRed()) {
                 return getTargetRotationPower();
             }
             else {
@@ -197,10 +188,3 @@ public class TeleOp2025V1 extends NextFTCOpMode {
         Locked = !Locked;
     }
 }
-
-
-
-
-
-
-
