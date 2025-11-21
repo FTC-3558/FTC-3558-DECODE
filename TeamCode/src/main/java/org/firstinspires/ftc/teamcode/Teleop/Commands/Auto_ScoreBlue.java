@@ -89,19 +89,18 @@ public class Auto_ScoreBlue extends Command {
             dynamicCommands.add(new InstantCommand(shuffler::rotateToEmptySlotForIntake));
         }
 
+        // 💥 CRITICAL FIX: Ensure the command list is NOT empty. 💥
+        if (dynamicCommands.isEmpty()) {
+            // If the list is empty (e.g., Shuffler is completely empty, or vision scoring failed to match),
+            // add a command that immediately finishes without doing anything (a NoOp command).
+            dynamicCommands.add(new Delay(.1));
+        }
+
         int size = dynamicCommands.size();
         Command[] commandsArray = new Command[size];
 
         for (int i = 0; i < size; i++) {
             commandsArray[i] = dynamicCommands.get(i);
-        }
-
-
-// 💥 CRITICAL FIX: Ensure the command list is NOT empty. 💥
-        if (dynamicCommands.isEmpty()) {
-            // If the list is empty (e.g., Shuffler is completely empty, or vision scoring failed to match),
-            // add a command that immediately finishes without doing anything (a NoOp command).
-            dynamicCommands.add(new Delay(.1));
         }
 
         // Pass the manually built array to the helper method.
