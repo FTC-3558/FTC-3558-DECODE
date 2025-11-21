@@ -6,14 +6,14 @@ import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Shuffler;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Shuffler.BallColor;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Vision;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.commands.delays.Delay;
 import dev.nextftc.core.commands.groups.SequentialGroup;
 import dev.nextftc.core.commands.utility.InstantCommand;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class Auto_ScoreRed extends Command {
 
@@ -25,7 +25,7 @@ public class Auto_ScoreRed extends Command {
     private static final List<BallColor> GPP_ORDER = Arrays.asList(BallColor.GREEN, BallColor.PURPLE, BallColor.PURPLE);
     private static final List<BallColor> PGP_ORDER = Arrays.asList(BallColor.PURPLE, BallColor.GREEN, BallColor.PURPLE);
     private static final List<BallColor> PPG_ORDER = Arrays.asList(BallColor.PURPLE, BallColor.PURPLE, BallColor.GREEN);
- //
+    //
 
     /*
      * Creates a command that checks for three balls, identifies the motif, and scores all three
@@ -38,7 +38,7 @@ public class Auto_ScoreRed extends Command {
         List<Command> dynamicCommands = new ArrayList<>();
 
         // Step 2: Check if all slots are full and determine the score order.
-        if (shuffler.getBallColors().contains(BallColor.VOID)) {
+        if (shuffler.getBallColors().contains(BallColor.VOID) || !shuffler.getBallColors().contains(BallColor.PURPLE) || !shuffler.getBallColors().contains(BallColor.GREEN)) {
             // If not all slots are full, Proceed to shoot all available balls.
             List<BallColor> ballState = shuffler.getBallColors();
             for (int i = 0; i < ballState.size(); i++) {
@@ -47,6 +47,7 @@ public class Auto_ScoreRed extends Command {
                 }
             }
         }
+// ... (Rest of the array creation and SequenceGroup creation remains the same)
         else {
             // Step 3: Determine the required scoring sequence based on Limelight data
             String motif = vision.getMotif();
@@ -71,23 +72,18 @@ public class Auto_ScoreRed extends Command {
             // We use a mutable copy of the ball colors list to track which slots have been used.
             List<BallColor> currentBallState = new ArrayList<>(shuffler.getBallColors());
 
-            for (BallColor targetColor : scoreOrder) {
-                // Find the index of the first slot containing the target color in the *current* state.
-                int slotIndex = currentBallState.indexOf(targetColor);
-
-                if (slotIndex != -1) {
-                    // Add the command to score the ball from the found slot.
-                    dynamicCommands.add(new Score_BallRed(slotIndex));
-
-                    // IMPORTANT: Mark the ball in the *local state* as VOID so we don't try to shoot it again.
-                    currentBallState.set(slotIndex, BallColor.VOID);
-                }
-            }
+            dynamicCommands.add(new Score_BallRed(shuffler.findSlotByColor(scoreOrder.get(0))));
+            currentBallState.set(0, BallColor.VOID);
+            dynamicCommands.add(new Score_BallRed(shuffler.findSlotByColor(scoreOrder.get(1))));
+            currentBallState.set(1, BallColor.VOID);
+            dynamicCommands.add(new Score_BallRed(shuffler.findSlotByColor(scoreOrder.get(2))));
+            currentBallState.set(2, BallColor.VOID);
 
             // Step 5: After scoring all three balls, rotate the shuffler to an empty slot for the next intake.
             dynamicCommands.add(new InstantCommand(shuffler::rotateToEmptySlotForIntake));
         }
 
+        // 💥 CRITICAL FIX: Ensure the command list is NOT empty. 💥
         if (dynamicCommands.isEmpty()) {
             // If the list is empty (e.g., Shuffler is completely empty, or vision scoring failed to match),
             // add a command that immediately finishes without doing anything (a NoOp command).
@@ -100,8 +96,6 @@ public class Auto_ScoreRed extends Command {
         for (int i = 0; i < size; i++) {
             commandsArray[i] = dynamicCommands.get(i);
         }
-
-
 
         // Pass the manually built array to the helper method.
         this.sequence = createSequentialGroup(commandsArray);
