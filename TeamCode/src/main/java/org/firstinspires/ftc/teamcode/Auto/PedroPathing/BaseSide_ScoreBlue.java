@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.teamcode.Teleop.Commands.Score_BallBlue;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Arm;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Intake;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Shooter;
@@ -101,20 +102,64 @@ public class BaseSide_ScoreBlue extends NextFTCOpMode {
 
         // 3. Initialize Paths now that the Follower is ready
         this.paths = new Paths(follower);
+        if (Vision.INSTANCE.getMotif() == "PPG") {
+            return new SequentialGroup(
+                    // 1. Drive the robot to the scoring position where the camera can see the tags.
+                    new FollowPath(paths.Rotate_to_Motif),
 
-        return new SequentialGroup(
-                // 1. Drive the robot to the scoring position where the camera can see the tags.
-                new FollowPath(paths.Rotate_to_Motif),
+                    // Optional: Wait briefly for the vision reading to stabilize after stopping the drive train.
+                    new Delay(1),
 
-                // Optional: Wait briefly for the vision reading to stabilize after stopping the drive train.
-                new Delay(1),
+                    // 2. Drive to the shooting area.
+                    new FollowPath(paths.Rotate_to_Score),
 
-                // 2. Drive to the shooting area.
-                new FollowPath(paths.Rotate_to_Score)
+                    new Score_BallBlue(0),
+                    new Score_BallBlue(2),
+                    new Score_BallBlue(1)
 
-                // 3. Score ALL three pre-loaded balls based on the detected motif.
-               // new Auto_Score()
-        );
+                    // 3. Score ALL three pre-loaded balls based on the detected motif.
+                    // new Auto_Score()
+            );
+        }
+        else if (Vision.INSTANCE.getMotif() == "PGP") {
+            return new SequentialGroup(
+                    // 1. Drive the robot to the scoring position where the camera can see the tags.
+                    new FollowPath(paths.Rotate_to_Motif),
+
+                    // Optional: Wait briefly for the vision reading to stabilize after stopping the drive train.
+                    new Delay(1),
+
+                    // 2. Drive to the shooting area.
+                    new FollowPath(paths.Rotate_to_Score),
+
+                    new Score_BallBlue(0),
+                    new Score_BallBlue(1),
+                    new Score_BallBlue(2)
+
+                    // 3. Score ALL three pre-loaded balls based on the detected motif.
+                    // new Auto_Score()
+            );
+        }
+        else {
+            return new SequentialGroup(
+                    // 1. Drive the robot to the scoring position where the camera can see the tags.
+                    new FollowPath(paths.Rotate_to_Motif),
+
+                    // Optional: Wait briefly for the vision reading to stabilize after stopping the drive train.
+                    new Delay(1),
+
+                    // 2. Drive to the shooting area.
+                    new FollowPath(paths.Rotate_to_Score),
+
+                    new Score_BallBlue(1),
+                    new Score_BallBlue(0),
+                    new Score_BallBlue(2)
+
+                    // 3. Score ALL three pre-loaded balls based on the detected motif.
+                    // new Auto_Score()
+            );
+        }
+
     }
 
     @Override

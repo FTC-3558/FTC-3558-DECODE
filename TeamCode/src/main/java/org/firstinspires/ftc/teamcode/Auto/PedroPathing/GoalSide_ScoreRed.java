@@ -11,6 +11,8 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.Teleop.Commands.Auto_ScoreBlue;
 import org.firstinspires.ftc.teamcode.Teleop.Commands.Auto_ScoreRed;
+import org.firstinspires.ftc.teamcode.Teleop.Commands.Score_BallBlue;
+import org.firstinspires.ftc.teamcode.Teleop.Commands.Score_BallRed;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Arm;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Intake;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Shooter;
@@ -94,19 +96,63 @@ public class GoalSide_ScoreRed extends NextFTCOpMode {
         // 3. Initialize Paths now that the Follower is ready
         this.paths = new Paths(follower);
 
-        return new SequentialGroup(
-                // 1. Drive the robot to the scoring position where the camera can see the tags.
-                new FollowPath(paths.Start_BackUp_Turn),
+        if (Vision.INSTANCE.getMotif() == "PPG") {
+            return new SequentialGroup(
+                    // 1. Drive the robot to the scoring position where the camera can see the tags.
+                    new FollowPath(paths.Start_BackUp_Turn),
 
-                // Optional: Wait briefly for the vision reading to stabilize after stopping the drive train.
-                new Delay(1),
+                    // Optional: Wait briefly for the vision reading to stabilize after stopping the drive train.
+                    new Delay(1),
 
-                // 2. Drive to the shooting area.
-                new FollowPath(paths.Leave_ToShoot),
+                    // 2. Drive to the shooting area.
+                    new FollowPath(paths.Leave_ToShoot),
 
-                // 3. Score ALL three pre-loaded balls based on the detected motif.
-                new Auto_ScoreRed()
-        );
+                    new Score_BallRed(0),
+                    new Score_BallRed(2),
+                    new Score_BallRed(1)
+
+                    // 3. Score ALL three pre-loaded balls based on the detected motif.
+                    // new Auto_Score()
+            );
+        }
+        else if (Vision.INSTANCE.getMotif() == "PGP") {
+            return new SequentialGroup(
+                    // 1. Drive the robot to the scoring position where the camera can see the tags.
+                    new FollowPath(paths.Start_BackUp_Turn),
+
+                    // Optional: Wait briefly for the vision reading to stabilize after stopping the drive train.
+                    new Delay(1),
+
+                    // 2. Drive to the shooting area.
+                    new FollowPath(paths.Leave_ToShoot),
+
+                    new Score_BallRed(0),
+                    new Score_BallRed(1),
+                    new Score_BallRed(2)
+
+                    // 3. Score ALL three pre-loaded balls based on the detected motif.
+                    // new Auto_Score()
+            );
+        }
+        else {
+            return new SequentialGroup(
+                    // 1. Drive the robot to the scoring position where the camera can see the tags.
+                    new FollowPath(paths.Start_BackUp_Turn),
+
+                    // Optional: Wait briefly for the vision reading to stabilize after stopping the drive train.
+                    new Delay(1),
+
+                    // 2. Drive to the shooting area.
+                    new FollowPath(paths.Leave_ToShoot),
+
+                    new Score_BallRed(1),
+                    new Score_BallRed(0),
+                    new Score_BallRed(2)
+
+                    // 3. Score ALL three pre-loaded balls based on the detected motif.
+                    // new Auto_Score()
+            );
+        }
     }
 
     @Override

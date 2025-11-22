@@ -9,6 +9,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.GoBildaPinpointDriver;
 import org.firstinspires.ftc.teamcode.Teleop.Commands.Auto_ScoreRed;
 import org.firstinspires.ftc.teamcode.Teleop.Commands.Intake_Store;
+import org.firstinspires.ftc.teamcode.Teleop.Commands.Score_BallRed;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Arm;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Intake;
 import org.firstinspires.ftc.teamcode.Teleop.SubSystems.Shooter;
@@ -105,14 +106,18 @@ public class TeleOpRed extends NextFTCOpMode {
                 .whenBecomesTrue(new Intake_Store());
 
         // 2. RIGHT BUMPER: Automated 3-Ball Score (Checks balls, reads vision, scores, resets)
-        Gamepads.gamepad1().rightBumper()
-                .whenBecomesTrue(new Auto_ScoreRed());
+        //Gamepads.gamepad1().rightBumper()
+               // .whenBecomesTrue(new Auto_ScoreRed());
 
         // 3. LEFT TRIGGER: Manual Intake Reverse (for clearing jams)
         Gamepads.gamepad1().leftTrigger()
                 .atLeast(.7).toggleOnBecomesTrue()
                 .whenBecomesTrue(Intake.INSTANCE.Reverse) // Bind reverse function
                 .whenBecomesFalse(Intake.INSTANCE.off);
+
+        Gamepads.gamepad1().dpadLeft().whenBecomesTrue(new Score_BallRed(0));
+        Gamepads.gamepad1().dpadDown().whenBecomesTrue(new Score_BallRed(1));
+        Gamepads.gamepad1().dpadRight().whenBecomesTrue(new Score_BallRed(2));
 
         // --- ROTATION LOCK ---
 
